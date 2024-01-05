@@ -16,8 +16,8 @@ from pygame.locals import (
 )
 
 # Define constatnts for the screen width and height
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 1200
+SCREEN_HEIGHT = 800
 
 # Define a player object by extending pygame.sprite.Sprite
 # The surface drawn on the screen is now an attribute of 'player'
@@ -61,7 +61,7 @@ class Enemy(pygame.sprite.Sprite):
                 random.randint(0, SCREEN_HEIGHT),
             )
         )
-        self.speed = random.randint(5, 20)
+        self.speed = random.randint(2, 10)
 
     # Move the sprite based on speed
     # Remove the sprite when it passes the left edge of the screen
@@ -130,6 +130,10 @@ while running:
     for entity in all_sprites:
         screen.blit(entity.surf, entity.rect)
 
-
+    # Check if any enemies have collided with the player
+    if pygame.sprite.spritecollideany(player, enemies):
+        # If so, then remove player and stop loop
+        player.kill()
+        running = False
     
     pygame.display.flip()
