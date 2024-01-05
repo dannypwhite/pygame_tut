@@ -6,6 +6,7 @@ import random
 # Import pygame.locals for easier access to key coordinates
 
 from pygame.locals import (
+    RLEACCEL,
     K_UP,
     K_DOWN,
     K_LEFT,
@@ -20,12 +21,12 @@ SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 800
 
 # Define a player object by extending pygame.sprite.Sprite
-# The surface drawn on the screen is now an attribute of 'player'
+# Use an image for a better looking sprite
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super(Player, self).__init__()
-        self.surf = pygame.Surface((75, 25))
-        self.surf.fill((255, 255, 255))
+        self.surf = pygame.image.load("assets/jet.png").convert()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect()
 
 # Move the sprite pased on user keypress
@@ -50,11 +51,12 @@ class Player(pygame.sprite.Sprite):
             self.rect.bottom = SCREEN_HEIGHT
 
 # Define enemy object by extending pygame.sprite.Sprite
+# Use an image for the sprite
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super(Enemy, self).__init__()
-        self.surf = pygame.Surface((20, 10))
-        self.surf.fill((255, 255, 255))
+        self.surf = pygame.image.load("assets/missile.png").convert()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect(
             center=(
                 random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
@@ -70,6 +72,26 @@ class Enemy(pygame.sprite.Sprite):
         if self.rect.right < 0:
             self.kill
 
+# Define the cloud object by extending pygame.sprite.Sprite
+# Use an image for the sprite
+class Cloud(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Cloud, self).__init__()
+        self.surf = pygame.image.load("assets/cloud.png").convert()
+        self.surf.set_colorkey((0, 0, 0), RLEACCEL)
+        # The starting process is randomly generated
+        self.rect = self.surf.get_rect(
+            center=(
+                random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
+                random.randint(0, SCREEN_HEIGHT),
+            )
+        )
+    # Move the cloud based on a constant speed
+    # Remove the cloud when it passes the left edge of the screen
+    def update(self):
+        self.rect.move_ip(-5, 0)
+        if self.rect.right < 0:
+            self.kill()
 #Initialize pygame
 pygame.init()
 
@@ -77,9 +99,11 @@ pygame.init()
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-# Create a custom event for adding a new enemy
+# Create a custom event for adding a new enemy + clouds
 ADDENEMY = pygame.USEREVENT + 1
 pygame.time.set_timer(ADDENEMY, 250)
+ADDCLOUD = pygame.USEREVENT + 2
+pygame.time.set_timer(ADDCLOUD, 1000)
 
 # Instantiate a player. Right now, this is just a rectangle
 player = Player()
@@ -88,6 +112,7 @@ player = Player()
 # - enemies is used for collision detection and position updates
 # - all_sprites is used for rendering
 enemies = pygame.sprite.Group()
+clouds = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
@@ -113,6 +138,13 @@ while running:
             new_enemy = Enemy()
             enemies.add(new_enemy)
             all_sprites.add(new_enemy)
+
+        # Add a new cloud
+        elif event.type == ADDCLOUD:
+            # Create a new cloud and add it to groups
+            new_cloud = Cloud()
+            clouds.add(new_cloud)
+            all_sprites.add(new_cloud)
             
     # Get the set of keys pressed and ckeck for user input
     pressed_keys = pygame.key.get_pressed()
@@ -122,10 +154,11 @@ while running:
 
     # Update enemy position
     enemies.update()
+    clouds.update()
     
 
-    # Fill the screen with black
-    screen.fill((0, 0, 0))
+    # Fill the screen with blue sky
+    screen.fill((135, 206, 250))
     # Draw all sprites
     for entity in all_sprites:
         screen.blit(entity.surf, entity.rect)
