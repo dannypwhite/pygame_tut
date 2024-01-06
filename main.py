@@ -63,7 +63,7 @@ class Enemy(pygame.sprite.Sprite):
                 random.randint(0, SCREEN_HEIGHT),
             )
         )
-        self.speed = random.randint(2, 10)
+        self.speed = random.randint(5, 20)
 
     # Move the sprite based on speed
     # Remove the sprite when it passes the left edge of the screen
@@ -104,6 +104,9 @@ ADDENEMY = pygame.USEREVENT + 1
 pygame.time.set_timer(ADDENEMY, 250)
 ADDCLOUD = pygame.USEREVENT + 2
 pygame.time.set_timer(ADDCLOUD, 1000)
+
+# Setup the clock for a decent framerate
+clock = pygame.time.Clock()
 
 # Instantiate a player. Right now, this is just a rectangle
 player = Player()
@@ -170,3 +173,6 @@ while running:
         running = False
     
     pygame.display.flip()
+
+    # Ensure the program maintains a rate of 30 frames per second
+    clock.tick(30)
