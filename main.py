@@ -68,11 +68,13 @@ class Enemy(pygame.sprite.Sprite):
         self.speed = random.randint(5, 20)
 
     # Move the sprite based on speed
-    # Remove the sprite when it passes the left edge of the screen
+    # Remove the sprite when it passes the left edge of the screen 
+    # Increase score by 10 for each enemy that leaves the screen
     def update(self):
         self.rect.move_ip(-self.speed, 0)
         if self.rect.right < 0:
-            self.kill
+            scoreboard.increase(10)
+            self.kill()
 
 # Define the cloud object by extending pygame.sprite.Sprite
 # Use an image for the sprite
@@ -94,6 +96,22 @@ class Cloud(pygame.sprite.Sprite):
         self.rect.move_ip(-5, 0)
         if self.rect.right < 0:
             self.kill()
+
+# Create a scoreboard class to keep track of score
+class Scoreboard:
+    def __init__(self, screen):
+        self.screen = screen
+        self.score = 0
+        self.font = pygame.font.SysFont('Arial', 30)
+    # Draws the scoreboard on the screen
+    def draw(self):
+        score_text = "Score: " + str(self.score)
+        score_surf = self.font.render(score_text, True, (255, 255, 255))
+        self.screen.blit(score_surf, (10, SCREEN_HEIGHT - 50))
+
+    # Increases the score when called
+    def increase(self, points):
+        self.score += points
 
 # Setup for sounds.  Defaults are good
 pygame.mixer.init() 
@@ -125,6 +143,9 @@ clouds = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
+# Create scoreboard
+scoreboard = Scoreboard(screen)
+
 # Variable to keep main loop running
 running = True
 
@@ -143,6 +164,7 @@ move_down_sound = pygame.mixer.Sound("assets/Falling_putter.ogg")
 collision_sound = pygame.mixer.Sound("assets/Collision.ogg")
 
 while running:
+
     # Look at every event in the queue
     for event in pygame.event.get():
         # Did the user hit a key?
@@ -168,7 +190,7 @@ while running:
             clouds.add(new_cloud)
             all_sprites.add(new_cloud)
             
-    # Get the set of keys pressed and ckeck for user input
+    # Get the set of keys pressed and check for user input
     pressed_keys = pygame.key.get_pressed()
 
     # Update the player sprite based on user keypress
@@ -181,6 +203,10 @@ while running:
 
     # Fill the screen with blue sky
     screen.fill((135, 206, 250))
+
+    # Draw scoreboard
+    scoreboard.draw()
+
     # Draw all sprites
     for entity in all_sprites:
         screen.blit(entity.surf, entity.rect)
