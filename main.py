@@ -14,6 +14,7 @@ from pygame.locals import (
     K_ESCAPE,
     KEYDOWN,
     QUIT,
+    K_s
 )
 
 # Define constatnts for the screen width and height
@@ -139,34 +140,9 @@ pygame.init()
 # Create the screen object
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-
-# Create a custom event for adding a new enemy + clouds
-ADDENEMY = pygame.USEREVENT + 1
-pygame.time.set_timer(ADDENEMY, 250)
-ADDCLOUD = pygame.USEREVENT + 2
-pygame.time.set_timer(ADDCLOUD, 1000)
-
-# Setup the clock for a decent framerate
-clock = pygame.time.Clock()
-
-# Instantiate a player. Right now, this is just a rectangle
-player = Player()
-
-# Create groups to hold enemy sprites and all sprites
-# - enemies is used for collision detection and position updates
-# - all_sprites is used for rendering
-enemies = pygame.sprite.Group()
-clouds = pygame.sprite.Group()
-all_sprites = pygame.sprite.Group()
-all_sprites.add(player)
-
 # Create scoreboard
 scoreboard = Scoreboard(screen)
 
-# Variable to keep main loop running
-running = True
-
-# Main loop
 
 # Load and play background music
 # Sound source: http://ccmixter.org/files/Apoxode/59262
@@ -179,78 +155,144 @@ pygame.mixer.music.play(loops=-1)
 move_up_sound = pygame.mixer.Sound("assets/Rising_putter.ogg")
 move_down_sound = pygame.mixer.Sound("assets/Falling_putter.ogg")
 collision_sound = pygame.mixer.Sound("assets/Collision.ogg")
+# Game loop
+def game_loop():
+    running = True
+    # Create a custom event for adding a new enemy + clouds
+    ADDENEMY = pygame.USEREVENT + 1
+    pygame.time.set_timer(ADDENEMY, 250)
+    ADDCLOUD = pygame.USEREVENT + 2
+    pygame.time.set_timer(ADDCLOUD, 1000)
 
-while running:
+    # Setup the clock for a decent framerate
+    clock = pygame.time.Clock()
 
-    # Look at every event in the queue
-    for event in pygame.event.get():
-        # Did the user hit a key?
-        if event.type == KEYDOWN:
-            # Was it the Escape key? If so, stop the loop.
-            if event.key == K_ESCAPE:
+    # Instantiate a player. Right now, this is just a rectangle
+    player = Player()
+
+    # Create groups to hold enemy sprites and all sprites
+    # - enemies is used for collision detection and position updates
+    # - all_sprites is used for rendering
+    enemies = pygame.sprite.Group()
+    clouds = pygame.sprite.Group()
+    all_sprites = pygame.sprite.Group()
+    all_sprites.add(player)
+
+    
+
+    while running:
+
+        # Look at every event in the queue
+        for event in pygame.event.get():
+            # Did the user hit a key?
+            if event.type == KEYDOWN:
+                # Was it the Escape key? If so, stop the loop.
+                if event.key == K_ESCAPE:
+                    running = False
+                    menu_active = True
+            # Did the user click the window close button? If so stop the loop.
+            elif event.type == QUIT:
                 running = False
-        # Did the user click the window close button? If so stop the loop.
-        elif event.type == QUIT:
-            running = False
 
-        # Add a new enemy?
-        elif event.type == ADDENEMY:
-            # Create the new enemy and add it to sprite groups
-            new_enemy = Enemy()
-            enemies.add(new_enemy)
-            all_sprites.add(new_enemy)
+            # Add a new enemy?
+            elif event.type == ADDENEMY:
+                # Create the new enemy and add it to sprite groups
+                new_enemy = Enemy()
+                enemies.add(new_enemy)
+                all_sprites.add(new_enemy)
 
-        # Add a new cloud
-        elif event.type == ADDCLOUD:
-            # Create a new cloud and add it to groups
-            new_cloud = Cloud()
-            clouds.add(new_cloud)
-            all_sprites.add(new_cloud)
-            
-    # Get the set of keys pressed and check for user input
-    pressed_keys = pygame.key.get_pressed()
+            # Add a new cloud
+            elif event.type == ADDCLOUD:
+                # Create a new cloud and add it to groups
+                new_cloud = Cloud()
+                clouds.add(new_cloud)
+                all_sprites.add(new_cloud)
+                
+        # Get the set of keys pressed and check for user input
+        pressed_keys = pygame.key.get_pressed()
 
-    # Update the player sprite based on user keypress
-    player.update(pressed_keys)
+        # Update the player sprite based on user keypress
+        player.update(pressed_keys)
 
-    # Update enemy position
-    enemies.update()
-    clouds.update()
-    
-
-    # Fill the screen with blue sky
-    screen.fill((135, 206, 250))
-
-    # Draw scoreboard
-    scoreboard.draw()
-
-    # Draw all sprites
-    for entity in all_sprites:
-        screen.blit(entity.surf, entity.rect)
-
-    # Check if any enemies have collided with the player
-    if pygame.sprite.spritecollideany(player, enemies):
-        # Check if there is a new high score, if so save to file
-        if scoreboard.score >= scoreboard.high_score:
-            high_score_file = open("game_data.txt", "w")
-            high_score_str = str(scoreboard.score)
-            high_score_file.write(high_score_str)
-            high_score_file.close()
-        # then remove player and stop loop
-        player.kill()
-
-        # Stop any moving sounds and play the collision sound
-        move_down_sound.stop()
-        move_up_sound.stop()
-        collision_sound.play()
+        # Update enemy position
+        enemies.update()
+        clouds.update()
         
-        # Stop the loop
-        running = False
-    
-    pygame.display.flip()
 
-    # Ensure the program maintains a rate of 30 frames per second
-    clock.tick(30)
+        # Fill the screen with blue sky
+        screen.fill((135, 206, 250))
+
+        # Draw scoreboard
+        scoreboard.draw()
+
+        # Draw all sprites
+        for entity in all_sprites:
+            screen.blit(entity.surf, entity.rect)
+
+        # Check if any enemies have collided with the player
+        if pygame.sprite.spritecollideany(player, enemies):
+            # Check if there is a new high score, if so save to file
+            if scoreboard.score >= scoreboard.high_score:
+                high_score_file = open("game_data.txt", "w")
+                high_score_str = str(scoreboard.score)
+                high_score_file.write(high_score_str)
+                high_score_file.close()
+            # set current score back to 0
+            scoreboard.score = 0
+            # then remove player and stop loop
+            player.kill()
+
+            # Stop any moving sounds and play the collision sound
+            move_down_sound.stop()
+            move_up_sound.stop()
+            collision_sound.play()
+
+            # Stop the loop
+            running = False
+            # Run the menu
+            menu_loop()
+        
+        pygame.display.flip()
+
+        # Ensure the program maintains a rate of 30 frames per second
+        clock.tick(30)
+# Menu loop
+def menu_loop():
+    #Variable for the menu loop
+    menu_active =True
+    while menu_active:
+        
+        # Fill screen with black
+        screen.fill((0,0,0))
+
+        # Draw title text
+        title_font = pygame.font.SysFont(None, 64)
+        title_text = title_font.render("Missile Max", True, (255, 255, 255))
+        title_rect = title_text.get_rect(center=screen.get_rect().center)
+        screen.blit(title_text, title_rect)
+
+        # Draw other menu text
+        menu_font = pygame.font.SysFont(None, 32) 
+        menu_text = menu_font.render("Press 'S' to Start", True, (255,255,255))
+        menu_rect = menu_text.get_rect(center=(SCREEN_WIDTH/2, 500))
+        screen.blit(menu_text, menu_rect)
+
+
+        #Check for keypresses
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    menu_active = False
+                elif event.key == K_s:
+                    menu_active = False
+                    game_loop()
+            # Did the user click the window close button? If so stop the loop.
+            elif event.type == QUIT:
+                menu_active = False
+
+        pygame.display.flip()
+
+menu_loop()
 
 # All done! Stop and quit the mixer.
 pygame.mixer.music.stop()
