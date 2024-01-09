@@ -258,6 +258,17 @@ def game_loop():
         clock.tick(30)
 # Menu loop
 def menu_loop():
+    # Load the current high score
+    current_high_score = 0
+    try:
+        high_score_file = open("game_data.txt", "r")
+        high_score_str = high_score_file.read()
+        current_high_score = int(high_score_str)
+        high_score_file.close()
+    except FileNotFoundError:
+        current_high_score = 0
+    except ValueError:
+        current_high_score = 0
     #Variable for the menu loop
     menu_active =True
     while menu_active:
@@ -266,16 +277,22 @@ def menu_loop():
         screen.fill((0,0,0))
 
         # Draw title text
-        title_font = pygame.font.SysFont(None, 64)
-        title_text = title_font.render("Missile Max", True, (255, 255, 255))
-        title_rect = title_text.get_rect(center=screen.get_rect().center)
+        title_font = pygame.font.SysFont(None, 84)
+        title_text = title_font.render("MISSILE MAX", True, (255, 255, 255))
+        title_rect = title_text.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/4))
         screen.blit(title_text, title_rect)
 
         # Draw other menu text
-        menu_font = pygame.font.SysFont(None, 32) 
-        menu_text = menu_font.render("Press 'S' to Start", True, (255,255,255))
-        menu_rect = menu_text.get_rect(center=(SCREEN_WIDTH/2, 500))
+        menu_font = pygame.font.SysFont(None, 48) 
+        menu_text = menu_font.render("PRESS 'S' TO START OR 'ESC' TO QUIT", True, (255,255,255))
+        menu_rect = menu_text.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
         screen.blit(menu_text, menu_rect)
+
+        # Draw the high score text
+        score_font = pygame.font.SysFont(None, 36)
+        score_text = score_font.render(f"CURRENT HIGH SCORE: {current_high_score}", True, (255, 255, 255))
+        score_rect = score_text.get_rect(center=(SCREEN_WIDTH/2, (SCREEN_HEIGHT*(3/4))))
+        screen.blit(score_text, score_rect)
 
 
         #Check for keypresses
