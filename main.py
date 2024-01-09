@@ -102,12 +102,29 @@ class Scoreboard:
     def __init__(self, screen):
         self.screen = screen
         self.score = 0
-        self.font = pygame.font.SysFont('Arial', 30)
+        self.font = pygame.font.SysFont('Arial', 28)
+        # Initialize high score
+        try:
+            high_score_file = open("game_data.txt", "r")
+            high_score_str = high_score_file.read()
+            self.high_score = int(high_score_str)
+            high_score_file.close()
+        except FileNotFoundError:
+            self.high_score = 0
+        except ValueError:
+            self.high_score = 0
     # Draws the scoreboard on the screen
     def draw(self):
-        score_text = "Score: " + str(self.score)
+        score_text = f"Score: {self.score}"
+        highscore_text = f"High Score: {self.high_score}"
         score_surf = self.font.render(score_text, True, (255, 255, 255))
-        self.screen.blit(score_surf, (10, SCREEN_HEIGHT - 50))
+        highscore_surf = self.font.render(highscore_text, True, (255, 255, 255))
+        self.screen.blit(score_surf, (10, SCREEN_HEIGHT - 80))
+        self.screen.blit(highscore_surf, (10, SCREEN_HEIGHT - 40))
+
+        # Check current score to high score
+        if self.score > self.high_score:
+            self.high_score = self.score
 
     # Increases the score when called
     def increase(self, points):
@@ -213,7 +230,13 @@ while running:
 
     # Check if any enemies have collided with the player
     if pygame.sprite.spritecollideany(player, enemies):
-        # If so, then remove player and stop loop
+        # Check if there is a new high score, if so save to file
+        if scoreboard.score >= scoreboard.high_score:
+            high_score_file = open("game_data.txt", "w")
+            high_score_str = str(scoreboard.score)
+            high_score_file.write(high_score_str)
+            high_score_file.close()
+        # then remove player and stop loop
         player.kill()
 
         # Stop any moving sounds and play the collision sound
